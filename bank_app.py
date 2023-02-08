@@ -1,7 +1,11 @@
 import sqlite3
 
+# def create_connection():
+#     connection = sqlite3.connect("bank.db")
+#     return connection
+
 def create_connection():
-    connection = sqlite3.connect("bank.db")
+    connection = sqlite3.connect("sqlite:////db")
     return connection
 
 def close_connection(connection):
@@ -27,16 +31,27 @@ def create_account(connection, name, balance):
         return "An account with this name already exists"
 
 
-
-def deposit(connection, name, amount):
+def retrieve_account(connection, account_id):
     cursor = connection.cursor()
-    cursor.execute("SELECT balance FROM accounts WHERE name=?", (name,))
+    cursor.execute("""SELECT name, balance FROM accounts
+                      WHERE name = ?""", (account_id,))
+    result = cursor.fetchone()
+    if result is None:
+        return None
+    else:
+        return {"name": result[0], "balance": result[1]}
+
+
+
+def deposit(connection, account_id, amount):
+    cursor = connection.cursor()
+    cursor.execute("SELECT balance FROM accounts WHERE name=?", (account_id,))
     account = cursor.fetchone()
     if account is None:
         return "Account does not exist"
     else:
         new_balance = account[0] + amount
-        cursor.execute("UPDATE accounts SET balance=? WHERE name=?", (new_balance, name))
+        cursor.execute("UPDATE accounts SET balance=? WHERE name=?", (new_balance, account_id))
         connection.commit()
         return "Deposit successful"
 
